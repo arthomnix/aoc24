@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 aoc_boilerplate = { git = "https://github.com/arthomnix/aoc_boilerplate" }
+regex = "1.11"
