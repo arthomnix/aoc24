@@ -1,3 +1,5 @@
+use std::{env, thread};
+use std::time::Duration;
 use colored::Colorize;
 use crate::days::day15::Dir::*;
 
@@ -111,7 +113,7 @@ fn visualise(grid: &Vec<Vec<char>>, (rx, ry): (usize, usize)) {
     for (y, l) in grid.iter().enumerate() {
         for (x, &c) in l.iter().enumerate() {
             if (x, y) == (rx, ry) {
-                print!("{}", "@".bright_white());
+                print!("{}", "@".bright_red());
             } else {
                 print!("{c}");
             }
@@ -123,12 +125,29 @@ fn visualise(grid: &Vec<Vec<char>>, (rx, ry): (usize, usize)) {
 pub(crate) fn part1(input: String) {
     let (mut grid, mut pos, moves) = parse(&input);
 
+    let vis = env::var_os("AOC_VISUALISE").is_some();
+
+    if vis {
+        print!("\x1b[2J");
+    }
+
     for dir in moves {
+        if vis {
+            print!("\x1b[H");
+            visualise(&grid, pos);
+            thread::sleep(Duration::from_millis(2));
+            println!("\x1b[K{}", gps(&grid));
+        }
+
         pos = try_move(&mut grid, dir, pos);
     }
 
-    visualise(&grid, pos);
-    println!("{}", gps(&grid));
+    if vis {
+        print!("\x1b[H");
+        visualise(&grid, pos);
+    }
+
+    println!("\x1b[K{}", gps(&grid));
 }
 
 fn try_move_box_vertical(grid: &mut Vec<Vec<char>>, dir: Dir, pos: (usize, usize), do_move: bool) -> bool {
@@ -230,10 +249,26 @@ pub(crate) fn part2(input: String) {
         .replace("@", "@.");
     let (mut grid, mut pos, moves) = parse(&input);
 
+    let vis = env::var_os("AOC_VISUALISE").is_some();
+
+    if vis {
+        print!("\x1b[2J");
+    }
+
     for dir in moves {
+        if vis {
+            print!("\x1b[H");
+            visualise(&grid, pos);
+            thread::sleep(Duration::from_millis(2));
+            println!("\x1b[K{}", gps(&grid));
+        }
+
         pos = try_move_p2(&mut grid, dir, pos);
     }
 
-    visualise(&grid, pos);
-    println!("{}", gps(&grid));
+    if vis {
+        print!("\x1b[H");
+        visualise(&grid, pos);
+    }
+    println!("\x1b[K{}", gps(&grid));
 }
