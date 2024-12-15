@@ -1,3 +1,4 @@
+use std::env;
 use colored::Colorize;
 
 const WIDTH: i64 = 101;
@@ -33,6 +34,8 @@ pub(crate) fn part2(input: String) {
         ((i.next().unwrap(), i.next().unwrap()), (i.next().unwrap(), i.next().unwrap()))
     }).collect();
 
+    let vis = env::var_os("AOC_VISUALISE").is_some();
+
     let mut iv: Option<i64> = None;
     let mut ih: Option<i64> = None;
     let mut i = 0;
@@ -44,17 +47,19 @@ pub(crate) fn part2(input: String) {
 
         if let (Some(iv), Some(ih)) = (iv, ih) {
             if ((i - iv) % WIDTH) == 0 && ((i - ih) % HEIGHT) == 0 {
-                for line in grid {
-                    for num in line {
-                        if num > 0 {
-                            print!("{}", "#".green());
-                        } else {
-                            print!(".");
+                if vis {
+                    for line in grid {
+                        for num in line {
+                            if num > 0 {
+                                print!("{}", "#".green());
+                            } else {
+                                print!(".");
+                            }
                         }
+                        println!();
                     }
-                    println!();
                 }
-                println!("i = {i}");
+                println!("{i}");
                 break;
             }
         } else {
