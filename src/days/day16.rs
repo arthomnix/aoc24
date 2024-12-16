@@ -59,7 +59,7 @@ impl PartialOrd<Self> for NodeEntry {
 
 impl Ord for NodeEntry {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.2.cmp(&other.2)
+        other.2.cmp(&self.2)
     }
 }
 
@@ -70,6 +70,10 @@ fn search(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> 
     queue.push(NodeEntry(start, East, 0));
 
     while let Some(NodeEntry(pos, dir, dist)) = queue.pop() {
+        if pos == end {
+            return dist;
+        }
+
         let np @ (nx, ny) = dir.move_by(pos);
         if grid[ny][nx] == '.' && dists.get(&(np, dir)).is_none_or(|&d| dist + 1 < d) {
             dists.insert((np, dir), dist + 1);
@@ -84,7 +88,7 @@ fn search(grid: &Vec<Vec<char>>, start: (usize, usize), end: (usize, usize)) -> 
         }
     }
 
-    [North, East, South, West].into_iter().filter_map(|dir| dists.get(&(end, dir)).copied()).min().unwrap()
+    panic!("no paths found");
 }
 
 pub(crate) fn part1(input: String) {
