@@ -34,7 +34,7 @@ impl Ord for NodeEntry {
 fn search(corrupted: &HashSet<(usize, usize)>) -> Option<usize> {
     let mut queue = BinaryHeap::new();
     let mut visited = HashMap::new();
-    queue.push(NodeEntry { pos: (0, 0), dist: 0});
+    queue.push(NodeEntry { pos: (0, 0), dist: 0 });
 
     while let Some(NodeEntry { pos: (x, y), dist }) = queue.pop() {
         if (x, y) == (SIZE, SIZE) {
