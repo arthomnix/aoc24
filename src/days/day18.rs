@@ -1,59 +1,33 @@
-use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 const SIZE: usize = 70;
 const BYTES: usize = 1024;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-struct NodeEntry {
-    pos: (usize, usize),
-    dist: usize,
-}
-
-impl NodeEntry {
-    fn h(&self) -> usize {
-        (SIZE - self.pos.0).max(SIZE - self.pos.1)
-    }
-}
-
-impl PartialOrd for NodeEntry {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for NodeEntry {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let d1 = self.dist + self.h();
-        let d2 = other.dist + other.h();
-        d2.cmp(&d1)
-    }
-}
-
-
 fn search(corrupted: &HashSet<(usize, usize)>) -> Option<usize> {
-    let mut queue = BinaryHeap::new();
+    let mut queue = VecDeque::new();
     let mut visited = HashMap::new();
-    queue.push(NodeEntry { pos: (0, 0), dist: 0 });
+    queue.push_back(((0, 0), 0));
 
-    while let Some(NodeEntry { pos: (x, y), dist }) = queue.pop() {
+    while let Some(((x, y), dist)) = queue.pop_front() {
         if (x, y) == (SIZE, SIZE) {
             return Some(dist);
         }
 
-        visited.insert((x, y), dist);
-
         if x > 0 && !corrupted.contains(&(x - 1, y)) && visited.get(&(x - 1, y)).is_none_or(|&d| d > dist + 1) {
-            queue.push(NodeEntry { pos: (x - 1, y), dist: dist + 1 });
+            queue.push_back(((x - 1, y), dist + 1));
+            visited.insert((x - 1, y), dist);
         }
         if x < SIZE && !corrupted.contains(&(x + 1, y)) && visited.get(&(x + 1, y)).is_none_or(|&d| d > dist + 1) {
-            queue.push(NodeEntry { pos: (x + 1, y), dist: dist + 1 });
+            queue.push_back(((x + 1, y), dist + 1));
+            visited.insert((x + 1, y), dist);
         }
         if y > 0 && !corrupted.contains(&(x, y - 1)) && visited.get(&(x, y - 1)).is_none_or(|&d| d > dist + 1) {
-            queue.push(NodeEntry { pos: (x, y - 1), dist: dist + 1 });
+            queue.push_back(((x, y - 1), dist + 1));
+            visited.insert((x, y - 1), dist);
         }
         if y < SIZE && !corrupted.contains(&(x, y + 1)) && visited.get(&(x, y + 1)).is_none_or(|&d| d > dist + 1) {
-            queue.push(NodeEntry { pos: (x, y + 1), dist: dist + 1 });
+            queue.push_back(((x, y + 1), dist + 1));
+            visited.insert((x, y + 1), dist);
         }
     }
 
