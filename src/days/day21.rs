@@ -89,7 +89,7 @@ impl Position for u8 {
     }
 }
 
-fn find<T: Position>(code: &[T], start: Option<Move>) -> Vec<Move> {
+fn find<T: Position>(code: &[T], start: Option<T>) -> Vec<Move> {
     let mut moves = vec![];
     let (mut x, mut y) = start.map(|m| m.position()).unwrap_or_else(T::default_position);
 
