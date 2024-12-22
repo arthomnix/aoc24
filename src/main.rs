@@ -1,3 +1,5 @@
+#![feature(stdarch_x86_avx512)]
+
 mod days;
 
 use days::*;
