@@ -19,38 +19,26 @@ pub(crate) fn part1(input: String) {
     let res = lines
         .chunks(16)
         .map(|chunks| {
-            if chunks.len() == 16 {
-                for i in 0..16 {
-                    a.0[i] = chunks[i].parse().unwrap();
+            for i in 0..16 {
+                a.0[i] = chunks.get(i).map(|&s| s.parse().unwrap()).unwrap_or(0);
+            }
+            let k = ((1 << chunks.len()) - 1) as __mmask16;
+            unsafe {
+                let mut secrets = _mm512_load_epi32(&a.0 as *const i32);
+                for _ in 0..2000 {
+                    let secrets2 = secrets.clone();
+                    secrets = _mm512_slli_epi32::<6>(secrets);
+                    secrets = _mm512_xor_epi32(secrets, secrets2);
+                    secrets = _mm512_and_epi32(secrets, mask);
+                    let secrets2 = secrets.clone();
+                    secrets = _mm512_srli_epi32::<5>(secrets);
+                    secrets = _mm512_xor_epi32(secrets, secrets2);
+                    let secrets2 = secrets.clone();
+                    secrets = _mm512_slli_epi32::<11>(secrets);
+                    secrets = _mm512_xor_epi32(secrets, secrets2);
+                    secrets = _mm512_and_epi32(secrets, mask);
                 }
-                unsafe {
-                    let mut secrets = _mm512_load_epi32(&a.0 as *const i32);
-                    for _ in 0..2000 {
-                        let secrets2 = secrets.clone();
-                        secrets = _mm512_slli_epi32::<6>(secrets);
-                        secrets = _mm512_xor_epi32(secrets, secrets2);
-                        secrets = _mm512_and_epi32(secrets, mask);
-                        let secrets2 = secrets.clone();
-                        secrets = _mm512_srli_epi32::<5>(secrets);
-                        secrets = _mm512_xor_epi32(secrets, secrets2);
-                        let secrets2 = secrets.clone();
-                        secrets = _mm512_slli_epi32::<11>(secrets);
-                        secrets = _mm512_xor_epi32(secrets, secrets2);
-                        secrets = _mm512_and_epi32(secrets, mask);
-                    }
-                    _mm512_reduce_add_epi32(secrets) as i64
-                }
-            } else {
-                chunks
-                    .iter()
-                    .map(|&l| {
-                        let mut secret = l.parse::<i64>().unwrap();
-                        for _ in 0..2000 {
-                            secret = next(secret);
-                        }
-                        secret
-                    })
-                    .sum::<i64>()
+                _mm512_mask_reduce_add_epi32(k, secrets) as i64
             }
         })
         .sum::<i64>();
