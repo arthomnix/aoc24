@@ -1,4 +1,4 @@
-use rayon::prelude::*;
+use std::collections::HashMap;
 
 fn next(mut secret: i64) -> i64 {
     secret = ((secret << 6 ) ^ secret) & 0xffffff;
@@ -44,29 +44,27 @@ pub(crate) fn part2(input: String) {
         })
         .collect::<Vec<_>>();
 
-    let bananas = (-9..=9).flat_map(|a| {
-        let prices = &prices;
-        let changes = &changes;
-        dbg!(a);
-        (-9..=9).flat_map(move |b| {
-            dbg!(b);
-            (-9..=9).flat_map(move |c| {
-                (-9..=9).map(move |d| {
-                    changes
-                        .par_iter()
-                        .enumerate()
-                        .filter_map(|(i, ch)| {
-                            ch
-                                .windows(4)
-                                .enumerate()
-                                .find(|&(_, w)| w == &[a, b, c, d])
-                                .map(|(j, _)| prices[i][j + 4])
-                        })
-                        .sum::<i64>()
+    let bananas = prices
+        .iter()
+        .zip(changes.iter())
+        .map(|(p, c)| {
+            c
+                .windows(4)
+                .enumerate()
+                .rev()
+                .map(|(i, w)| {
+                    ([w[0], w[1], w[2], w[3]], p[i + 4])
                 })
-            })
+                .collect::<HashMap<_, _>>()
         })
-    })
+        .reduce(|mut a, b| {
+            for (k, v) in b {
+                a.entry(k).and_modify(|n| *n += v).or_insert(v);
+            }
+            a
+        })
+        .unwrap()
+        .into_values()
         .max()
         .unwrap();
 
