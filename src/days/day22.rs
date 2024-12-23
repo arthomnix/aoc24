@@ -1,13 +1,38 @@
 use std::arch::x86_64::*;
 use std::collections::HashMap;
 
+// stolen from giooschi's solution: https://github.com/SkiFire13/advent-of-codspeed-2024/blob/master/src/day22.rs
+#[inline(always)]
+pub(crate) fn parse8(n: u64) -> i32 {
+    use std::num::Wrapping as W;
+
+    let mut n = W(n);
+    let mask = W(0xFF | (0xFF << 32));
+    let mul1 = W(100 + (1000000 << 32));
+    let mul2 = W(1 + (10000 << 32));
+
+    n = (n * W(10)) + (n >> 8);
+    n = (((n & mask) * mul1) + (((n >> 16) & mask) * mul2)) >> 32;
+
+    n.0 as i32
+}
+
+macro_rules! parse {
+    ($ptr:ident) => {{
+        let n = $ptr.cast::<u64>().read_unaligned();
+        let len = _pext_u64(n, 0x1010101010101010).trailing_ones();
+        let n = (n & 0x0F0F0F0F0F0F0F0F) << (8 * (8 - len));
+        $ptr = $ptr.add(len as usize + 1);
+        parse8(n)
+    }};
+}
+pub(crate) use parse;
+
 #[repr(align(64))]
 #[derive(Copy, Clone, Debug)]
 struct Aligned([i32; 16]);
 
 pub(crate) fn part1(input: String) {
-    let lines = input.lines().collect::<Vec<_>>();
-
     // AVX-512 GFNI solution, based on work by @voltara88 on the AoC Discord
     // https://voltara.org/advent/2024/Advent%20of%20Code%202024%20Day%2022%20Part%201.pdf
 
@@ -52,20 +77,31 @@ pub(crate) fn part1(input: String) {
 
     let mut a = Aligned([0; 16]);
     let mut result = unsafe { _mm512_setzero_epi32() };
+    let mut ptr = input.as_ptr();
 
-    for chunks in lines.chunks(16) {
-        for i in 0..16 {
-            a.0[i] = chunks.get(i).map(|&s| s.parse().unwrap()).unwrap_or(0);
+    while ptr < unsafe { input.as_ptr().add(input.len()) } {
+        if ptr <= unsafe { input.as_ptr().add(input.len() - 16 * 8) } {
+            for i in 0..16 {
+                a.0[i] = unsafe { parse!(ptr) };
+            }
+        } else {
+            for i in 0..16 {
+                if ptr <= unsafe { input.as_ptr().add(input.len() - 8) } {
+                    a.0[i] = unsafe { parse!(ptr) };
+                } else {
+                    a.0[i] = 0;
+                }
+            }
         }
 
         unsafe {
             let secrets = _mm512_load_si512(&a.0 as *const i32);
             let secrets_low = _mm512_permutexvar_epi8(p_low, secrets);
             let secrets_mid = _mm512_permutexvar_epi8(p_mid, secrets);
-            let secrets_hi  = _mm512_permutexvar_epi8(p_hi,  secrets);
+            let secrets_hi = _mm512_permutexvar_epi8(p_hi, secrets);
             let a = _mm512_gf2p8affine_epi64_epi8::<0>(secrets_low, matrices_0);
             let b = _mm512_gf2p8affine_epi64_epi8::<0>(secrets_mid, matrices_1);
-            let c = _mm512_gf2p8affine_epi64_epi8::<0>(secrets_hi,  matrices_2);
+            let c = _mm512_gf2p8affine_epi64_epi8::<0>(secrets_hi, matrices_2);
             let d = _mm512_ternarylogic_epi64::<0x96>(a, b, c);
             let r = _mm512_permutexvar_epi8(p_rev, d);
             result = _mm512_add_epi32(result, r);
@@ -78,7 +114,8 @@ pub(crate) fn part1(input: String) {
         _mm512_reduce_add_epi64(_mm512_add_epi64(lo, hi))
     };
 
-    println!("{res}");
+    std::hint::black_box(res);
+    //println!("{res}");
 }
 
 fn next(mut secret: i64) -> i64 {
