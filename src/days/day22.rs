@@ -1,13 +1,5 @@
 use std::arch::x86_64::*;
 use std::collections::HashMap;
-
-fn next(mut secret: i64) -> i64 {
-    secret = ((secret << 6 ) ^ secret) & 0xffffff;
-    secret = ((secret >> 5 ) ^ secret) & 0xffffff;
-    secret = ((secret << 11) ^ secret) & 0xffffff;
-    secret
-}
-
 #[repr(align(64))]
 struct Aligned([i32; 16]);
 
@@ -43,6 +35,13 @@ pub(crate) fn part1(input: String) {
         })
         .sum::<i64>();
     println!("{res}");
+}
+
+fn next(mut secret: i64) -> i64 {
+    secret = ((secret << 6 ) ^ secret) & 0xffffff;
+    secret = ((secret >> 5 ) ^ secret) & 0xffffff;
+    secret = ((secret << 11) ^ secret) & 0xffffff;
+    secret
 }
 
 pub(crate) fn part2(input: String) {
