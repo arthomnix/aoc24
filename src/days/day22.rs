@@ -53,6 +53,7 @@ pub(crate) fn part1(input: String) {
             0x0000000000000000_u64 as i64, 0x0000000000000000_u64 as i64,
          )
     };
+
     let matrices_2 = unsafe {
         _mm512_set_epi64(
             0xb00193b6071c8868_u64 as i64, 0xb00193b6071c8868_u64 as i64,
