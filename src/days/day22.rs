@@ -7,8 +7,7 @@ struct Aligned([i32; 16]);
 pub(crate) fn part1(input: String) {
     let lines = input.lines().collect::<Vec<_>>();
     let mut a = Aligned([0; 16]);
-    let mask = Aligned([0xffffff; 16]);
-    let mask = unsafe { _mm512_load_epi32(&mask.0 as *const i32) };
+    let mask = unsafe { _mm512_set1_epi32(0xffffff) };
     let res = lines
         .chunks(16)
         .map(|chunks| {
